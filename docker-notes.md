@@ -172,6 +172,72 @@ Look at the call stack for the current thread:
     #5  0x00007f05509b8b45 in __libc_start_main ... libc-start.c:287
     #6  0x00000000007222fd in _start ()
 
+
+New Experiment
+
+Deploy the PHP Hello World app. SSH into a Managed VM instance.
+
+    sudo docker ps
+    CONTAINER ID        IMAGE
+    ...
+    60786d1e1c82        appengine.gcr.io/389014331831046975/steve-43.default.20151204t010509:latest
+    ...
+    stevepe@gae-default-20151204t010509-ikhg:/$ sudo docker exec -i -t 60786d1e1c82 bash
+
+    root@60786d1e1c82:/app# ps auxf
+    USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+    root        68  0.0  0.1  20220  3052 ?        Ss   19:09   0:00 bash
+    root        74  0.0  0.1  17484  2076 ?        R+   19:10   0:00  \_ ps auxf
+    root         1  0.0  0.8  55596 15540 ?        Ss   07:08   0:07 /usr/bin/python /usr/bin/supervisord
+    root        17  0.0  1.0 166456 18576 ?        S    07:08   0:01 php-fpm: master process (/usr/local/php56/etc/php-fpm.conf)
+    www-data    21  0.2  0.7 166576 12604 ?        S    07:08   1:49  \_ php-fpm: pool app
+    www-data    22  0.2  0.7 166576 12544 ?        S    07:08   1:49  \_ php-fpm: pool app
+    www-data    29  0.2  0.7 166576 12540 ?        S    08:49   1:28  \_ php-fpm: pool app
+    root        18  0.0  0.1  28636  3132 ?        S    07:08   0:00 nginx: master process /usr/local/nginx/sbin/nginx
+    www-data    20  0.0  0.2  30312  3896 ?        S    07:08   0:05  \_ nginx: worker process
+    root        19  0.0  0.1  25888  2272 ?        S    07:08   0:00 /usr/sbin/cron -f
+
+In the container, php-fpm has PID = 17, and nginx has PID = 18.
+
+Back out of the container:
+
+    exit
+
+    ps auxf
+    ...
+    root      3406  0.0  0.8  55596 15540 ?        Ss   07:08   0:07  \_ /usr/bin/python /usr/bin/supervisord
+    root      3568  0.0  1.0 166456 18576 ?        S    07:08   0:01  |   \_ php-fpm: master process (/usr/local/php56/etc/php-fpm.conf)
+    www-data  3600  0.2  0.7 166576 12604 ?        S    07:08   1:50  |   |   \_ php-fpm: pool app
+    www-data  3601  0.2  0.7 166576 12544 ?        S    07:08   1:49  |   |   \_ php-fpm: pool app
+    www-data  4339  0.2  0.7 166576 12540 ?        S    08:49   1:29  |   |   \_ php-fpm: pool app
+    root      3570  0.0  0.1  28636  3132 ?        S    07:08   0:00  |   \_ nginx: master process /usr/local/nginx/sbin/nginx
+    www-data  3590  0.0  0.2  30312  3896 ?        S    07:08   0:06  |   |   \_ nginx: worker process
+    ...
+
+Here in the root (namespace?), php-fpm has PID=3568, and nginx has PID=3570.
+
+Look at the namespace identifiers for the two processes:
+
+    root@gae-default-20151204t010509-ikhg:/proc/3568/ns# ls -l
+    lrwxrwxrwx 1 root root 0 Dec  4 19:01 ipc -> ipc:[4026532276]
+    lrwxrwxrwx 1 root root 0 Dec  4 19:01 mnt -> mnt:[4026532274]
+    lrwxrwxrwx 1 root root 0 Dec  4 19:01 net -> net:[4026532279]
+    lrwxrwxrwx 1 root root 0 Dec  4 19:01 pid -> pid:[4026532277]
+    lrwxrwxrwx 1 root root 0 Dec  4 19:01 user -> user:[4026531837]
+    lrwxrwxrwx 1 root root 0 Dec  4 19:01 uts -> uts:[4026532275]
+
+    root@gae-default-20151204t010509-ikhg:/proc/3570/ns# ls -l
+    lrwxrwxrwx 1 root root 0 Dec  4 19:02 ipc -> ipc:[4026532276]
+    lrwxrwxrwx 1 root root 0 Dec  4 19:02 mnt -> mnt:[4026532274]
+    lrwxrwxrwx 1 root root 0 Dec  4 19:02 net -> net:[4026532279]
+    lrwxrwxrwx 1 root root 0 Dec  4 19:02 pid -> pid:[4026532277]
+    lrwxrwxrwx 1 root root 0 Dec  4 19:02 user -> user:[4026531837]
+    lrwxrwxrwx 1 root root 0 Dec  4 19:02 uts -> uts:[4026532275]
+
+We see that all of the namespaces for the two processes are the same. So these
+two processes have the same view of the directory tree, the network, the list of processes,
+the list of users, the ipc stuff (investigate), and the uts stuff (investigate).
+
 References
 
 * [Namespaces](http://unix.stackexchange.com/questions/113530/how-to-find-out-namespace-of-a-particular-process)
