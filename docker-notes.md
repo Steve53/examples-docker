@@ -1,3 +1,35 @@
+Install Docker
+
+    sudo apt-get install docker.io
+    sudo ln -sf usr/bin/docker.io /usr/local/bin/docker
+
+    ls -l /usr/bin/docker*
+    -rwxr-xr-x 1 root root 15240483 Aug 21  2014 /usr/bin/docker
+    lrwxrwxrwx 1 root root        6 Aug 21  2014 /usr/bin/docker.io -> docker
+
+    ls -l /usr/local/bin/docker*
+    lrwxrwxrwx 1 root root 18 Oct 17 16:04 /usr/local/bin/docker -> /usr/bin/docker.io
+
+    So the docker executable (about 15 MB) is in /usr/bin/docker. And we have a couple of links to it.
+
+Try it
+
+    sudo docker run --rm -ti ubuntu:latest /bin/bash
+
+[https://docs.docker.com/reference/commandline/run/](https://docs.docker.com/reference/commandline/run/)
+[https://docs.docker.com/reference/run/](https://docs.docker.com/reference/run/)
+
+    docker run: Run a command in a new container.
+    --rm   Automatically remove the container when it exits.
+    -t   Allocate a pseudo-TTY.
+    -i   Keep STDIN open even if not attached.
+    The image is ubuntu:latest.
+    The command is /bin/bash.
+
+Try another
+
+    sudo docker run -p 8080 google/nodejs-hello
+
 Deploy the Node.js (MongoDB) app.
 
 SSH into one of the managed VMS.
