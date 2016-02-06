@@ -343,22 +343,124 @@ We see that PHP is installed by getting the source code, configuring, and buildi
 Extensions like mongodb are installed by pecl.
 Composer is installed by a curl command.
 
-Another look at the layers in gcr.io/google_appengine/base (058534bf7f14).
+Another look at the layers in gcr.io/php-mvm-a/php-nginx.
 
-    sudo docker run gcr.io/php-mvm-a/php-nginx:latest
+Take the first layer after the base, ae64cc35933c.
 
-In another terminal,
+    sudo docker inspect ae64cc35933c
 
-    cd /var/lib/docker/aufs/layers
+Here's the instruction for that layer:
 
-    cat 058534bf7f14 TAB
+    RUN apt-get update && apt-get install -y --no-install-recommends \
+    cron \
+    curl \
+    gettext \
+    git \
+    libbz2-1.0 \
+    libicu52 \
+    libmcrypt4 \
+    libmemcached11 \
+    libmemcachedutil2 \
+    libpcre3 \
+    libpng12-0 \
+    libpq5 \
+    libreadline6 \
+    librecode0 \
+    libsqlite3-0 \
+    libxml2 \
+    libxslt1.1 \
+    logrotate \
+    mercurial \
+    subversion \
+    supervisor \
+    zlib1g
+
+For me, the image layers are under /var/lib/docker/aufs/diff
+
+    cd /var/lib/docker/aufs/diff
+    cd ae64cc35933c TAB
+
+Now we can see the files that are part of this layer. Here are some library files.
+
+    cd /usr/lib
+    ls -l
+
+    rwxr-xr-x  2 root root   4096 Feb  4 00:43 gettext
+    drwxr-xr-x  3 root root   4096 Feb  4 00:43 git-core
+    -rw-r--r--  1 root root 258704 Nov 30  2014 libgettextlib-0.19.3.so
+    -rw-r--r--  1 root root 285424 Nov 30  2014 libgettextsrc-0.19.3.so
+    lrwxrwxrwx  1 root root     18 Sep 19  2014 libmcrypt.so.4 -> libmcrypt.so.4.4.8
+    -rw-r--r--  1 root root 183080 Sep 19  2014 libmcrypt.so.4.4.8
+    drwxr-xr-x  3 root root   4096 Feb  4 00:42 mime
+    -rw-r--r--  1 root root  43552 Nov 30  2014 preloadable_libintl.so
+    drwxr-xr-x 26 root root  20480 Feb  4 00:43 python2.7
+    drwxr-xr-x  2 root root   4096 Sep 25 08:54 sasl2
+    drwxr-xr-x  2 root root   4096 Feb  4 00:42 valgrind
+    drwxr-xr-x  8 root root   4096 Feb  4 00:43 x86_64-linux-gnu
+
+Here are some executable files.
+
+    cd /usr/bin
+    ls -l
+
+    -rwxr-sr-x 1 root crontab   36008 Jun 11  2015 crontab
+    -rwxr-xr-x 1 root root     182216 Jan 26 23:16 curl
+    ...
+    -rwxr-xr-x 1 root root    1680768 Jan  4 19:16 git
+    ...
+    -rwxr-xr-x 1 root root    3785928 Mar  1  2015 python2.7
+    ...
+    -rwxr-xr-x 1 root root        313 Feb  8  2014 supervisord
+    ...
+
+Now let's look at the next layer: 
+
+    cd /var/lib/docker/aufs/diff
+    cd 331d1eb28211 TAB
+    ls -l
+
+   total 0
+
+Apparently this layer has no files.
+
+Go to the next layer.
+
+    cd /var/lib/docker/aufs/diff
+    cd 331d1eb28211 TAB
+    ls -l
+
+    total 0
+
+No files here either.
+
+Go to the next layer.
+
+    cd /var/lib/docker/aufs/diff
+    cd 41ad28903a1b TAB
+    ls
+
+    build-scripts
+
+This time we got a new directory, but no files.
+
+Go to the next layer.
+
+    cd /var/lib/docker/aufs/diff
+    cd ec77c1af9ef3 TAB
+    cd build-scripts
+    ls 
+  
+    apt_build_deps.sh
+
+This time we got a script file.
+
+Note that each layer has only the file that were added for that layer.
+It's not a cumulative set of file.
 
 
-Another look at the layers of a running container
-
-http://blog.thoward37.me/articles/where-are-docker-images-stored/
 
     
+   
 
     
     
